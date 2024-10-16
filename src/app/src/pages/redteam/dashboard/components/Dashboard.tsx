@@ -5,7 +5,6 @@ import {
   riskCategories,
   riskCategorySeverityMap,
 } from '@app/pages/redteam/report/components/constants';
-import { callApi } from '@app/utils/api';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -37,7 +36,7 @@ interface AttackSuccessRateDataPoint {
   total: number;
 }
 
-export default function Dashboard() {
+export default function Dashboard({ callApi }: { callApi: (path: string, options?: RequestInit) => Promise<Response> }) {
   const [evals, setEvals] = useState<StandaloneEval[]>([]);
   const [originalEvals, setOriginalEvals] = useState<StandaloneEval[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<string | null>(null);

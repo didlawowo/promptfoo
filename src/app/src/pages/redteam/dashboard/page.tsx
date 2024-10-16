@@ -1,10 +1,10 @@
 import CrispChat from '@app/components/CrispChat';
 import Dashboard from './components/Dashboard';
 
-export default function Page() {
+export default function Page({ callApi }: { callApi: (path: string, options?: RequestInit) => Promise<Response> }) {
   return (
     <>
-      <Dashboard />
+      <Dashboard callApi={callApi} />
       <CrispChat />
     </>
   );

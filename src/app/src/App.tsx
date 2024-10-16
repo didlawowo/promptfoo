@@ -14,6 +14,7 @@ import PromptsPage from './pages/prompts/page';
 import RedteamDashboardPage from './pages/redteam/dashboard/page';
 import ReportPage from './pages/redteam/report/page';
 import RedteamSetupPage from './pages/redteam/setup/page';
+import { callApi } from './utils/api';
 
 const basename = import.meta.env.VITE_PUBLIC_BASENAME || '';
 
@@ -30,7 +31,7 @@ const router = createBrowserRouter(
       <Route path="/report" element={<ReportPage />} />
       {import.meta.env.VITE_PROMPTFOO_EXPERIMENTAL && (
         <>
-          <Route path="/dashboard" element={<RedteamDashboardPage />} />
+          <Route path="/dashboard" element={<RedteamDashboardPage callApi={callApi} />} />
           <Route path="/redteam/setup" element={<RedteamSetupPage />} />
         </>
       )}
