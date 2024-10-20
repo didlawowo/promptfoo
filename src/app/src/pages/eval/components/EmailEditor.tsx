@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
+import { useGlobalStore } from '@app/stores/globalStore';
 import { callApi } from '@app/utils/api';
 import EditIcon from '@mui/icons-material/Edit';
 import { Chip, Popover, TextField, Button, Box, Tooltip, CircularProgress } from '@mui/material';
 import { ApiSchemas } from '@server/apiSchemas';
-import { useStore } from './store';
 
 const EmailEditor: React.FC = () => {
-  const { author, setAuthor } = useStore();
+  const { userEmail, setUserEmail } = useGlobalStore();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [email, setEmail] = useState(author || '');
+  const [email, setEmail] = useState(userEmail || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
-    setEmail(author || '');
+    setEmail(userEmail || '');
     setError(null);
   };
 
@@ -39,7 +39,7 @@ const EmailEditor: React.FC = () => {
       const result = await response.json();
       ApiSchemas.Email.Update.Response.parse(result);
 
-      setAuthor(email);
+      setUserEmail(email);
       handleClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -53,10 +53,10 @@ const EmailEditor: React.FC = () => {
 
   return (
     <>
-      <Tooltip title={author ? 'Click to edit' : 'Set eval author'}>
+      <Tooltip title={userEmail ? 'Click to edit' : 'Set user email'}>
         <Chip
           icon={<EditIcon fontSize="small" />}
-          label={author ? `Author: ${author}` : 'Set author'}
+          label={userEmail ? `Email: ${userEmail}` : 'Set email'}
           onClick={handleClick}
           sx={{
             height: '24px',
