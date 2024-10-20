@@ -37,10 +37,10 @@ import { convertResultsToTable } from '@promptfoo/util/convertEvalResultsToTable
 import type { VisibilityState } from '@tanstack/table-core';
 import invariant from 'tiny-invariant';
 import { useDebounce } from 'use-debounce';
+import EmailEditor from '../../../components/EmailEditor';
 import CompareEvalMenuItem from './CompareEvalMenuItem';
 import ConfigModal from './ConfigModal';
 import DownloadMenu from './DownloadMenu';
-import EmailEditor from './EmailEditor';
 import EvalSelectorDialog from './EvalSelectorDialog';
 import EvalSelectorKeyboardShortcut from './EvalSelectorKeyboardShortcut';
 import ResultsCharts from './ResultsCharts';
