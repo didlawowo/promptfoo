@@ -40,6 +40,7 @@ import { useDebounce } from 'use-debounce';
 import CompareEvalMenuItem from './CompareEvalMenuItem';
 import ConfigModal from './ConfigModal';
 import DownloadMenu from './DownloadMenu';
+import EmailEditor from './EmailEditor';
 import EvalSelectorDialog from './EvalSelectorDialog';
 import EvalSelectorKeyboardShortcut from './EvalSelectorKeyboardShortcut';
 import ResultsCharts from './ResultsCharts';
@@ -72,7 +73,6 @@ export default function ResultsView({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    author,
     table,
     setTable,
     config,
@@ -411,17 +411,7 @@ export default function ResultsView({
             />
           </>
         )}
-        <Tooltip title={author ? '' : 'Set eval author with `promptfoo config set email`'}>
-          <Chip
-            size="small"
-            label={
-              <>
-                <strong>Author:</strong> {author || 'Unknown'}
-              </>
-            }
-            sx={{ opacity: 0.7 }}
-          />
-        </Tooltip>
+        <EmailEditor />
         {Object.keys(config?.tags || {}).map((tag) => (
           <Chip
             key={tag}
