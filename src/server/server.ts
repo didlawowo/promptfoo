@@ -49,6 +49,7 @@ import {
   deleteEval,
   writeResultsToDatabase,
 } from '../util';
+import { ApiSchemas } from './apiSchemas';
 import { providersRouter } from './routes/providers';
 
 // Running jobs
@@ -63,17 +64,6 @@ export enum BrowserBehavior {
   SKIP = 2,
   OPEN_TO_REPORT = 3,
 }
-
-const EmailSchema = z.string().email();
-
-const GetEmailResponseSchema = z.object({
-  email: EmailSchema.nullable(),
-});
-
-const SetEmailResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
 
 export function createApp() {
   const app = express();
@@ -353,7 +343,8 @@ export function createApp() {
   app.get('/api/email', async (req, res) => {
     try {
       const email = getUserEmail();
-      res.json(GetEmailResponseSchema.parse({ email }));
+      res.json(ApiSchemas.Email.Get.Response.parse({ email }));
+      await telemetry.recordAndSend('webui_api_event', { event: 'email_get' });
     } catch (error) {
       console.error('Error getting email:', error);
       res.status(500).json({ error: 'Failed to get email' });
@@ -362,10 +353,10 @@ export function createApp() {
 
   app.post('/api/email', async (req, res) => {
     try {
-      const email = EmailSchema.parse(req.body.email);
+      const { email } = ApiSchemas.Email.Update.Request.parse(req.body);
       setUserEmail(email);
       res.json(
-        SetEmailResponseSchema.parse({
+        ApiSchemas.Email.Update.Response.parse({
           success: true,
           message: `Email updated`,
         }),
