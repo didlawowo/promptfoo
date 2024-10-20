@@ -31,6 +31,10 @@ export default function ApiSettingsModal<T extends { open: boolean; onClose: () 
   };
 
   const validateEmail = (email: string) => {
+    if (email === '') {
+      setEmailError(null);
+      return;
+    }
     const result = ApiSchemas.Email.Update.Request.safeParse({ email });
     if (result.success) {
       setEmailError(null);
@@ -46,15 +50,15 @@ export default function ApiSettingsModal<T extends { open: boolean; onClose: () 
   };
 
   const handleSave = () => {
-    if (!emailError && tempEmail) {
+    if (!emailError) {
       setApiBaseUrl(tempApiBaseUrl);
       enablePersistApiBaseUrl();
-      setUserEmail(tempEmail);
+      setUserEmail(tempEmail || null); // Set to null if empty string
       onClose();
     }
   };
 
-  const isSaveDisabled = !!emailError || !tempEmail || !tempApiBaseUrl;
+  const isSaveDisabled = !!emailError || !tempApiBaseUrl;
 
   return (
     <Dialog
@@ -81,7 +85,7 @@ export default function ApiSettingsModal<T extends { open: boolean; onClose: () 
         </Typography>
         <TextField
           label="Email"
-          helperText={emailError || 'Your email address'}
+          helperText={emailError || 'Your email address (optional)'}
           value={tempEmail}
           onChange={handleEmailChange}
           fullWidth

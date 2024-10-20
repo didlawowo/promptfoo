@@ -1,12 +1,7 @@
+import { ApiSchemas } from '@server/apiSchemas';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Config, ProviderOptions } from '../types';
-
-interface RedTeamConfigState {
-  config: Config;
-  updateConfig: (section: keyof Config, value: any) => void;
-  resetConfig: () => void;
-}
 
 export const DEFAULT_HTTP_TARGET: ProviderOptions = {
   id: 'http',
@@ -36,9 +31,16 @@ const defaultConfig: Config = {
   entities: [],
 };
 
+interface RedTeamConfigState {
+  config: Config;
+  updateConfig: (section: keyof Config, value: any) => void;
+  resetConfig: () => void;
+  sendConfig: (email: string) => Promise<any>;
+}
+
 export const useRedTeamConfig = create<RedTeamConfigState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       config: defaultConfig,
       updateConfig: (section, value) =>
         set((state) => ({
@@ -48,6 +50,23 @@ export const useRedTeamConfig = create<RedTeamConfigState>()(
           },
         })),
       resetConfig: () => set({ config: defaultConfig }),
+      sendConfig: async (email: string) => {
+        const { config } = get();
+        const response = await fetch('/api/redteam/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, config }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send config copy');
+        }
+
+        const result = await response.json();
+        return ApiSchemas.Redteam.Send.Response.parse(result);
+      },
     }),
     {
       name: 'redTeamConfig',

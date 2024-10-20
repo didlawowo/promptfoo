@@ -19,4 +19,16 @@ export const ApiSchemas = {
       }),
     },
   },
+  Redteam: {
+    Send: {
+      Request: z.object({
+        email: EmailSchema,
+        config: z.record(z.unknown()),
+      }),
+      Response: z.object({
+        success: z.boolean(),
+        message: z.string(),
+      }),
+    },
+  },
 };

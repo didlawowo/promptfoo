@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import InlineEmailEditor from '@app/components/InlineEmailEditor';
+import { useGlobalStore } from '@app/stores/globalStore';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -12,21 +16,46 @@ import { useRedTeamConfig } from '../hooks/useRedTeamConfig';
 import { generateOrderedYaml } from '../utils/yamlHelpers';
 
 export default function Review() {
-  const { config, updateConfig } = useRedTeamConfig();
+  const { config, updateConfig, sendConfig } = useRedTeamConfig();
+  const { userEmail } = useGlobalStore();
+  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsEmailValid(!!userEmail);
+  }, [userEmail]);
 
   const handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateConfig('description', event.target.value);
   };
 
-  const handleSaveYaml = () => {
-    const yamlContent = generateOrderedYaml(config);
-    const blob = new Blob([yamlContent], { type: 'text/yaml' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'promptfooconfig.yaml';
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleEmailValidityChange = (isValid: boolean) => {
+    setIsEmailValid(isValid);
+  };
+
+  const handleSaveYaml = async () => {
+    if (!isEmailValid || !userEmail) {
+      alert('Please enter a valid email address before downloading the configuration.');
+      return;
+    }
+    setIsSending(true);
+    setSendError(null);
+    try {
+      await sendConfig(userEmail);
+      const yamlContent = generateOrderedYaml(config);
+      const blob = new Blob([yamlContent], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'promptfooconfig.yaml';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setSendError('Failed to send config copy. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const getPluginLabel = (plugin: string | RedteamPlugin) => {
@@ -114,11 +143,35 @@ export default function Review() {
         <ol>
           <li>
             <Typography variant="body1" paragraph>
-              Save your configuration as a YAML file:
+              Enter your email and save your configuration as a YAML file. A copy will also be sent
+              to your email:
             </Typography>
-            <Button variant="contained" color="primary" onClick={handleSaveYaml} sx={{ mb: 2 }}>
-              Save YAML
-            </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+              <InlineEmailEditor onValidityChange={handleEmailValidityChange} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  A copy of the configuration will be sent to this email.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSaveYaml}
+                  disabled={!isEmailValid || isSending}
+                >
+                  {isSending ? <CircularProgress size={24} /> : 'Save YAML'}
+                </Button>
+              </Box>
+            </Box>
+            {!isEmailValid && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                Please enter a valid email address to receive and download the configuration.
+              </Alert>
+            )}
+            {sendError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {sendError}
+              </Alert>
+            )}
           </li>
           <li>
             <Typography variant="body1" paragraph>
