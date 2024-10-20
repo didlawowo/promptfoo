@@ -11,11 +11,13 @@ import opener from 'opener';
 import { Server as SocketIOServer } from 'socket.io';
 import invariant from 'tiny-invariant';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { fromError } from 'zod-validation-error';
 import { createPublicUrl } from '../commands/share';
 import { VERSION } from '../constants';
 import { getDbSignalPath } from '../database';
 import { getDirectory } from '../esm';
+import { getUserEmail, setUserEmail } from '../globalConfig/accounts';
 import type {
   EvaluateSummaryV2,
   EvaluateTestSuiteWithEvaluateOptions,
@@ -61,6 +63,17 @@ export enum BrowserBehavior {
   SKIP = 2,
   OPEN_TO_REPORT = 3,
 }
+
+const EmailSchema = z.string().email();
+
+const GetEmailResponseSchema = z.object({
+  email: EmailSchema.nullable(),
+});
+
+const SetEmailResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
 
 export function createApp() {
   const app = express();
@@ -334,6 +347,37 @@ export function createApp() {
     } catch (error) {
       console.error('Error processing telemetry request:', error);
       res.status(500).json({ error: 'Failed to process telemetry request' });
+    }
+  });
+
+  app.get('/api/email', async (req, res) => {
+    try {
+      const email = getUserEmail();
+      res.json(GetEmailResponseSchema.parse({ email }));
+    } catch (error) {
+      console.error('Error getting email:', error);
+      res.status(500).json({ error: 'Failed to get email' });
+    }
+  });
+
+  app.post('/api/email', async (req, res) => {
+    try {
+      const email = EmailSchema.parse(req.body.email);
+      setUserEmail(email);
+      res.json(
+        SetEmailResponseSchema.parse({
+          success: true,
+          message: `Email updated`,
+        }),
+      );
+      await telemetry.recordAndSend('webui_api_event', { event: 'email_set' });
+    } catch (error) {
+      console.error('Error setting email:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: fromError(error).toString() });
+      } else {
+        res.status(500).json({ error: 'Failed to set email' });
+      }
     }
   });
 
