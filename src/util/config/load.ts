@@ -302,22 +302,26 @@ export async function combineConfigs(configPaths: string[]): Promise<UnifiedConf
 
   let prompts: UnifiedConfig['prompts'] = configsAreStringOrArray ? [] : {};
 
-  const makeAbsolute = (configPath: string, relativePath: string | Prompt) => {
-    if (typeof relativePath === 'string') {
-      if (relativePath.startsWith('file://')) {
-        relativePath =
-          'file://' + path.resolve(path.dirname(configPath), relativePath.slice('file://'.length));
-      }
-      return relativePath;
-    } else if (typeof relativePath === 'object' && relativePath.id) {
-      if (relativePath.id.startsWith('file://')) {
-        relativePath.id =
+  const makeAbsolute = (configPath: string, promptOrRelativePath: string | Prompt) => {
+    if (typeof promptOrRelativePath === 'string') {
+      if (promptOrRelativePath.startsWith('file://')) {
+        promptOrRelativePath =
           'file://' +
-          path.resolve(path.dirname(configPath), relativePath.id.slice('file://'.length));
+          path.resolve(path.dirname(configPath), promptOrRelativePath.slice('file://'.length));
       }
-      return relativePath;
+      return promptOrRelativePath;
+    } else if (
+      typeof promptOrRelativePath === 'object' &&
+      (promptOrRelativePath.id || promptOrRelativePath.label)
+    ) {
+      if (promptOrRelativePath.id?.startsWith('file://')) {
+        promptOrRelativePath.id =
+          'file://' +
+          path.resolve(path.dirname(configPath), promptOrRelativePath.id.slice('file://'.length));
+      }
+      return promptOrRelativePath;
     } else {
-      throw new Error(`Invalid prompt object: ${JSON.stringify(relativePath)}`);
+      throw new Error(`Invalid prompt object: ${JSON.stringify(promptOrRelativePath)}`);
     }
   };
 
@@ -325,7 +329,7 @@ export async function combineConfigs(configPaths: string[]): Promise<UnifiedConf
   const addSeenPrompt = (prompt: string | Prompt) => {
     if (typeof prompt === 'string') {
       seenPrompts.add(prompt);
-    } else if (typeof prompt === 'object' && prompt.id) {
+    } else if (typeof prompt === 'object' && (prompt.id || prompt.label)) {
       seenPrompts.add(prompt);
     } else {
       throw new Error('Invalid prompt object');
